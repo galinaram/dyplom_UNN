@@ -28,21 +28,23 @@ def check_stability(real_values, imag_values):
     path = Path(points)
     return path.contains_point((-1, 0))
 
-def on_plot_button_click(entries, omega_range_entry, step_entry, canvas, fig, result_label):
+def on_plot_button_click(entries,omega_min_entry, omega_range_entry, step_entry, canvas, fig, result_label):
     """
     Обработчик события для кнопки "Построить график".
     Строит график устойчивости на встроенном виджете и проверяет устойчивость.
     """
     params = get_params_from_entries(entries)
     try:
+        omega_min = float(omega_min_entry.get())
         omega_range = float(omega_range_entry.get())
         step = float(step_entry.get())
     except ValueError:
+        omega_min = 0 # Значение по умолчанию
         omega_range = 100  # Значение по умолчанию
         step = 0.01  # Значение по умолчанию
 
     # Вычисление значений для границы устойчивости
-    real_values, imag_values = compute_stability_boundary(params, omega_range, step)
+    real_values, imag_values = compute_stability_boundary(params, omega_min, omega_range, step)
 
     # Проверка устойчивости
     unstable = check_stability(real_values, imag_values)
@@ -107,6 +109,12 @@ def create_plot_tab(parent):
     canvas_widget.pack(fill="both", expand=True)
 
     # Поля ввода omega и шага
+    omega_min_label = ttk.Label(input_frame, text="Минимальное значение omega:")
+    omega_min_label.pack(padx=5, pady=5)
+    omega_min_entry = ttk.Entry(input_frame)
+    omega_min_entry.pack(padx=5, pady=5)
+    omega_min_entry.insert(0, "0")
+
     omega_label = ttk.Label(input_frame, text="Максимальное значение omega:")
     omega_label.pack(padx=5, pady=5)
     omega_range_entry = ttk.Entry(input_frame)
@@ -137,7 +145,7 @@ def create_plot_tab(parent):
         input_frame,
         text="Построить график",
         command=lambda: on_plot_button_click(
-            entries, omega_range_entry, step_entry, canvas, fig, result_label
+            entries, omega_min_entry, omega_range_entry, step_entry, canvas, fig, result_label
         )
     )
     plot_button.pack(pady=10)

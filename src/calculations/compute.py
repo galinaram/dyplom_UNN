@@ -76,7 +76,7 @@ def compute_values(params, omega_range, step):
     return omega_values, real_values, imag_values
 
 
-def compute_stability_boundary(params, omega_range, step):
+def compute_stability_boundary(params, omega_min, omega_range, step):
     """
     Вычисление границы устойчивости системы на комплексной плоскости.
     Возвращает значения реальной и мнимой частей функции для заданного диапазона omega.
@@ -84,7 +84,7 @@ def compute_stability_boundary(params, omega_range, step):
     real_values = []
     imag_values = []
 
-    omega = 0
+    omega = omega_min
     while omega <= omega_range:
         w = calculate_w(omega, params)
         real_values.append(w.real)  # Действительная часть
