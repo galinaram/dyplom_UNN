@@ -28,6 +28,39 @@ def check_stability(real_values, imag_values):
     path = Path(points)
     return path.contains_point((-1, 0))
 
+# def check_stability(real_values, imag_values):
+#     """
+#     Проверяет устойчивость по критерию Найквиста.
+#     Возвращает True если система НЕустойчива (точка -1 внутри контура).
+#
+#     Улучшения:
+#     - Фильтрация выбросов
+#     - Проверка замкнутости кривой
+#     - Нормализация значений
+#     """
+#     import numpy as np
+#     from matplotlib.path import Path
+#
+#     # 1. Фильтрация выбросов
+#     real = np.array(real_values)
+#     imag = np.array(imag_values)
+#
+#     # Удаляем значения > 1e6 (эмпирический порог)
+#     mask = (np.abs(real) < 1e6) & (np.abs(imag) < 1e6)
+#     real = real[mask]
+#     imag = imag[mask]
+#
+#     # 2. Проверка замкнутости (первая и последняя точка должны быть близки)
+#     if np.linalg.norm([real[0] - real[-1], imag[0] - imag[-1]]) > 0.1:
+#         print("Предупреждение: кривая не замкнута!")
+#         # Можно автоматически замкнуть:
+#         real = np.append(real, real[0])
+#         imag = np.append(imag, imag[0])
+#
+#     # 3. Проверка положения точки (-1, 0)
+#     path = Path(np.column_stack((real, imag)))
+#     return path.contains_point((-1, 0))
+
 def on_plot_button_click(entries,omega_min_entry, omega_range_entry, step_entry, canvas, fig, result_label):
     """
     Обработчик события для кнопки "Построить график".
@@ -54,7 +87,7 @@ def on_plot_button_click(entries,omega_min_entry, omega_range_entry, step_entry,
     ax = fig.add_subplot(111)
 
     # Построение графика
-    ax.plot(real_values, imag_values, color="red", label="Граница устойчивости")
+    ax.plot(real_values, imag_values, color="red", label="Граница D-разбиения")
 
     # Настройки графика
     ax.axhline(0, color="black", linewidth=0.5, linestyle="--")
@@ -66,6 +99,8 @@ def on_plot_button_click(entries,omega_min_entry, omega_range_entry, step_entry,
     # Настройка легенды (правый верхний угол, меньший размер)
     ax.legend(loc='upper right', prop={'size': 9})
 
+    ax.plot(-1, 0, 'ro',color="blue", label='Точка (-1,0)')
+    ax.legend()
     ax.grid(True)
 
     entries = {}
