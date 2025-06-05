@@ -10,19 +10,28 @@ class LoginPage:
         self.parent = parent
         self.pages = pages
 
-        # Главный фрейм страницы
+        # Главный фрейм с вертикальным выравниванием
         self.main_frame = ttk.Frame(parent)
+        self.main_frame.pack(expand=True, fill=tk.BOTH, pady=20)  # Добавлены отступы сверху и снизу
 
-        # Настройка стилей
+        # Стили
         self.style = ttk.Style()
         self.style.configure('Main.TFrame', background='#f5f5f5')
-        self.style.configure('Title.TLabel', font=('Arial', 18, 'bold'), background='#f5f5f5')
-        self.style.configure('Desc.TLabel', font=('Arial', 11), background='#f5f5f5')
-        self.style.configure('Nav.TButton', font=('Arial', 12), padding=10)
+        self.style.configure('Title.TLabel', font=('Arial', 22, 'bold'), background='#f5f5f5')
+        self.style.configure('Desc.TLabel', font=('Arial', 13), background='#f5f5f5')
+        self.style.configure('Nav.TButton', font=('Arial', 14), padding=12)
+        self.style.configure('Back.TButton',
+                             font=('Arial', 12),
+                             padding=5,
+                             foreground='#2c3e50')
 
-        # 1. Верхняя часть - Название проекта
-        self.header_frame = ttk.Frame(self.main_frame)
-        self.header_frame.pack(fill='x', pady=(0, 20))
+        # Контейнер для всего контента (без кнопок)
+        self.content_container = ttk.Frame(self.main_frame)
+        self.content_container.pack(expand=True, fill=tk.BOTH, pady=(0, 20))  # Отступ снизу для кнопок
+
+        # Заголовок
+        self.header_frame = ttk.Frame(self.content_container)
+        self.header_frame.pack(fill='x', pady=(0, 30))
 
         ttk.Label(
             self.header_frame,
@@ -31,32 +40,38 @@ class LoginPage:
             justify='center'
         ).pack(expand=True)
 
-        # 2. Центральная часть (изображение + описание)
-        self.content_frame = ttk.Frame(self.main_frame)
+        # Основной контент (изображение + текст)
+        self.content_frame = ttk.Frame(self.content_container)
         self.content_frame.pack(expand=True, fill='both')
 
-        # 2.1 Левая часть - Изображение
-        self.image_frame = ttk.Frame(self.content_frame, width=300)
-        self.image_frame.pack(side='left', fill='y', padx=(0, 20))
+        # Изображение
+        self.image_frame = ttk.Frame(self.content_frame, width=650)
+        self.image_frame.pack(side='left', fill='both', padx=(0, 60))
 
         try:
-            path = r"images/дсп-1.jpg"
-            img = Image.open(path)
-            img = img.resize((300, 300), Image.LANCZOS)
+            img_path = os.path.join("images", "дсп-1.jpg")
+            if not os.path.exists(img_path):
+                raise FileNotFoundError(f"Изображение не найдено: {os.path.abspath(img_path)}")
+
+            img = Image.open(img_path)
+            img = img.resize((600, 450), Image.LANCZOS)
             self.scheme_img = ImageTk.PhotoImage(img)
+
             ttk.Label(
                 self.image_frame,
                 image=self.scheme_img,
                 background='#f5f5f5'
-            ).pack(pady=20)
-        except:
+            ).pack(pady=10, anchor='w')
+        except Exception as e:
+            print(f"Ошибка загрузки изображения: {e}")
             ttk.Label(
                 self.image_frame,
                 text="Схема системы электрододержателей",
-                style='Desc.TLabel'
+                style='Desc.TLabel',
+                font=('Arial', 14)
             ).pack(expand=True)
 
-        # 2.2 Правая часть - Описание модели
+        # Текст
         self.desc_frame = ttk.Frame(self.content_frame)
         self.desc_frame.pack(side='left', expand=True, fill='both')
 
@@ -65,7 +80,6 @@ class LoginPage:
 
         • Крутильные колебания трех электрододержателей
         • Электродинамические силы взаимодействия
-        • Упругие и демпфирующие характеристики
 
         Для анализа устойчивости используется:
         - Метод D-разбиения
@@ -75,7 +89,7 @@ class LoginPage:
         Программа позволяет:
         1. Задавать параметры системы
         2. Строить границы устойчивости
-        3. Анализировать критические режимы
+        3. Выявлять и исследовать состояния равновесия
         """
 
         ttk.Label(
@@ -83,16 +97,15 @@ class LoginPage:
             text=description_text,
             style='Desc.TLabel',
             justify='left'
-        ).pack(anchor='w', padx=20)
+        ).pack(anchor='w', padx=20, pady=10)
 
-        # 3. Нижняя часть - Кнопки навигации
+        # Навигация (кнопки в отдельном контейнере)
         self.nav_frame = ttk.Frame(self.main_frame)
-        self.nav_frame.pack(fill='x', pady=(20, 0))
+        self.nav_frame.pack(fill='x', pady=(0, 10))  # Отступ только снизу
 
         buttons = [
             ("Параметры", self.open_parameters),
-            ("Расчет", self.open_calculations),
-            ("Графики", self.open_visualization),
+            ("Устойчивость", self.open_visualization),
             ("Справка", self.open_help)
         ]
 
@@ -102,31 +115,27 @@ class LoginPage:
                 text=text,
                 command=cmd,
                 style='Nav.TButton'
-            ).pack(side='left', expand=True, padx=10)
+            ).pack(side='left', expand=True, padx=15)
 
     def show(self):
-        """Показать эту страницу"""
         self.main_frame.pack(expand=True, fill=tk.BOTH)
 
     def hide(self):
-        """Скрыть эту страницу"""
         self.main_frame.pack_forget()
 
     def open_parameters(self):
         self.hide()
-        self.pages["notebook"].pack(expand=True, fill=tk.BOTH)
-        self.pages["notebook"].select(0)  # Выбираем вкладку параметров
-
-    def open_calculations(self):
-        self.hide()
-        self.pages["notebook"].pack(expand=True, fill=tk.BOTH)
-        # Здесь можно добавить выбор соответствующей вкладки
+        self.pages["help"].pack_forget()
+        self.pages["tab_container"].pack(expand=True, fill=tk.BOTH)
+        self.pages["notebook"].select(0)
 
     def open_visualization(self):
         self.hide()
-        self.pages["notebook"].pack(expand=True, fill=tk.BOTH)
-        self.pages["notebook"].select(1)  # Выбираем вкладку графиков
+        self.pages["help"].pack_forget()
+        self.pages["tab_container"].pack(expand=True, fill=tk.BOTH)
+        self.pages["notebook"].select(1)
 
     def open_help(self):
-        print("Открытие справки")
-        # Здесь можно реализовать открытие справки
+        self.hide()
+        self.pages["notebook"].pack_forget()
+        self.pages["help"].pack(expand=True, fill=tk.BOTH)
