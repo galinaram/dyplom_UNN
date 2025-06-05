@@ -2,13 +2,15 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+
 import os
 
 
 class LoginPage:
-    def __init__(self, parent, pages):
+    def __init__(self, parent, pages, show_page_func):
         self.parent = parent
         self.pages = pages
+        self.show_page_func = show_page_func
 
         # Главный фрейм с вертикальным выравниванием
         self.main_frame = ttk.Frame(parent)
@@ -124,18 +126,12 @@ class LoginPage:
         self.main_frame.pack_forget()
 
     def open_parameters(self):
-        self.hide()
-        self.pages["help"].pack_forget()
-        self.pages["tab_container"].pack(expand=True, fill=tk.BOTH)
+        self.show_page_func(self.pages, "tab_container")
         self.pages["notebook"].select(0)
 
     def open_visualization(self):
-        self.hide()
-        self.pages["help"].pack_forget()
-        self.pages["tab_container"].pack(expand=True, fill=tk.BOTH)
+        self.show_page_func(self.pages, "tab_container")
         self.pages["notebook"].select(1)
 
     def open_help(self):
-        self.hide()
-        self.pages["notebook"].pack_forget()
-        self.pages["help"].pack(expand=True, fill=tk.BOTH)
+        self.show_page_func(self.pages, "help")
