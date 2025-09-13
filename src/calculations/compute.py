@@ -1,18 +1,25 @@
 # Модуль compute.py
-# Реализация математической модели системы
+# Реализация математической модели системы электрододержателей ДСП
 
 import math
 import cmath
 
 
 def get_param_value(params, key):
-    """Вспомогательная функция для получения значения параметра из новой структуры"""
+    """Получает значение параметра из словаря параметров"""
     return params[key]['value']
 
 
 def calculate_sigma(params):
     """
-    Функция для расчета приведенной электродинамической силы sigma.
+    Вычисляет приведенную электродинамическую силу sigma по формуле:
+    sigma = (μa * I1 * ((α3 + β3*lg) + I1*R) * β3 * l * (l²/2 + l1*l)) /
+            (2π * r13 * (I1*(R² + X²) + R*(α3 + β3*lg)))
+    где:
+    μa - магнитная проницаемость
+    I1 - ток
+    α3, β3 - коэффициенты
+    lg, R, X, r13, l, l1 - геометрические параметры системы
     """
     mu0 = get_param_value(params, 'mu0')
     I1 = get_param_value(params, 'I')
@@ -25,49 +32,58 @@ def calculate_sigma(params):
     l = get_param_value(params, 'l')
     l1 = get_param_value(params, 'l1')
 
-    mua = mu0 * 1  # для случая, если относительная магнитная проницаемость равна 1
+    mua = mu0 * 1  # относительная магнитная проницаемость
     pi = math.pi
-    sigma = (mua * I1 * ((alfa3 + betta3 * lg) + I1 * R) * betta3 * l * (l * l / 2 + l1 * l)) / \
-            (2 * pi * r13 * (I1 * (R ** 2 + X ** 2) + R * (alfa3 + betta3 * lg)))
 
-    return sigma
+    numerator = mua * I1 * ((alfa3 + betta3 * lg) + I1 * R) * betta3 * l * (l * l / 2 + l1 * l)
+    denominator = 2 * pi * r13 * (I1 * (R ** 2 + X ** 2) + R * (alfa3 + betta3 * lg))
+
+    return numerator / denominator
+
 
 def calculate_w(omega, params):
     """
-    Функция для расчета значения функции комплексной переменной w в зависимости от omega.
+    Вычисляет значение комплексной функции w(ω) по формуле:
+    w(ω) = [8σ³e^(-3pτ) - (40c + 8P1 + P2)σ²e^(-2pτ) +
+            (64c² + 32P1 + 2P2)cσe^(-pτ) - (32c³ + (32P1 + P2)c²)] / (P1² * P2)
+    где:
+    p = iω (комплексная переменная)
+    P1 = P2 = Jp² + bp + c
+    σ - приведенная электродинамическая сила
+    τ - временная задержка
     """
     c = get_param_value(params, 'c')
     J = get_param_value(params, 'J')
     b = get_param_value(params, 'b')
-    tau = get_param_value(params, 't')  # t в формуле соответствует tau
+    tau = get_param_value(params, 't')  # временная задержка
     sigma = calculate_sigma(params)
 
-    # Создаем комплексное число для расчетов
-    p = complex(0, omega)
-    P1 = J * p ** 2 + b * p + c
-    P2 = J * p ** 2 + b * p + c  # В формуле P1 и P2 одинаковые, так как c1 = c2 = c
+    p = complex(0, omega)  # комплексная переменная
+    P = J * p ** 2 + b * p + c  # характеристический полином
 
-    # Расчет комплексной функции w согласно формуле
+    # Расчет слагаемых функции w
     term1 = 8 * sigma ** 3 * cmath.exp(-3 * p * tau)
-    term2 = (40 * c + 8 * P1 + P2) * sigma ** 2 * cmath.exp(-2 * p * tau)
-    term3 = (64 * c ** 2 + 32 * P1 + 2 * P2) * c * sigma * cmath.exp(-p * tau)
-    term4 = 32 * c ** 3 + (32 * P1 + P2) * c ** 2
+    term2 = (40 * c + 8 * P + P) * sigma ** 2 * cmath.exp(-2 * p * tau)
+    term3 = (64 * c ** 2 + 32 * P + 2 * P) * c * sigma * cmath.exp(-p * tau)
+    term4 = 32 * c ** 3 + (32 * P + P) * c ** 2
 
-    w = (term1 - term2 + term3 - term4) / (P1 ** 2 * P2)
-
-    return w
+    return (term1 - term2 + term3 - term4) / (P ** 2 * P)
 
 
-def compute_values(params,omega_min, omega_range, step):
+def compute_values(params, omega_min, omega_max, step):
     """
-    Вычисление значений реальной и мнимой частей функции w для заданного диапазона omega.
+    Вычисляет значения функции w(ω) в диапазоне частот [omega_min, omega_max] с шагом step
+    Возвращает:
+    - список частот omega
+    - список действительных частей w(ω)
+    - список мнимых частей w(ω)
     """
     real_values = []
     imag_values = []
     omega_values = []
 
     omega = omega_min
-    while omega <= omega_range:
+    while omega <= omega_max:
         w = calculate_w(omega, params)
         real_values.append(w.real)
         imag_values.append(w.imag)
@@ -77,19 +93,9 @@ def compute_values(params,omega_min, omega_range, step):
     return omega_values, real_values, imag_values
 
 
-def compute_stability_boundary(params, omega_min, omega_range, step):
+def compute_stability_boundary(params, omega_min, omega_max, step):
     """
-    Вычисление границы устойчивости системы на комплексной плоскости.
-    Возвращает значения реальной и мнимой частей функции для заданного диапазона omega.
+    Вычисляет границу устойчивости (действительную и мнимую части w(ω))
+    для анализа устойчивости методом D-разбиения
     """
-    real_values = []
-    imag_values = []
-
-    omega = omega_min
-    while omega <= omega_range:
-        w = calculate_w(omega, params)
-        real_values.append(w.real)  # Действительная часть
-        imag_values.append(w.imag)  # Мнимая часть
-        omega += step
-
-    return real_values, imag_values
+    return compute_values(params, omega_min, omega_max, step)[1:]
