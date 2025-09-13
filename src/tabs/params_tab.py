@@ -1,3 +1,5 @@
+# Файл params_tab.py
+
 from tkinter import ttk
 from config import PARAMS
 

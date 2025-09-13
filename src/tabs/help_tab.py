@@ -1,17 +1,25 @@
+# Файл help_tab.py
+# Реализация вкладки справки для программы анализа устойчивости
+
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 
 
 def create_help_tab(parent, pages, show_page):
-    """Создает фрейм справки с кнопкой возврата и вкладками"""
+    """Создает и возвращает фрейм справки с навигацией и вкладками
+
+    Параметры:
+        parent: Родительский виджет
+        pages: Словарь страниц приложения
+        show_page: Функция переключения страниц
+
+    Возвращает:
+        ttk.Frame: Сконфигурированный фрейм справки
+    """
     main_frame = ttk.Frame(parent)
 
-    # Создаем панель с кнопкой назад
-    nav_frame = ttk.Frame(main_frame)
-    nav_frame.pack(fill='x', pady=5)
-
-    # Кнопка "Назад"
+    # Навигационная панель с кнопкой возврата
     back_btn = ttk.Button(
         main_frame,
         text="← На главную",
@@ -23,110 +31,23 @@ def create_help_tab(parent, pages, show_page):
     # Блокнот с вкладками справки
     notebook = ttk.Notebook(main_frame)
     notebook.pack(fill='both', expand=True, padx=10, pady=5)
-
-    # Добавляем вкладки справки
     _add_help_tabs(notebook)
 
     return main_frame
 
+
 def _add_help_tabs(notebook):
-    """Добавляет вкладки в блокнот справки с разделённым окном"""
-    # Вкладка 1: Теоретические основы
+    """Добавляет вкладки с теоретической информацией и руководством
+
+    Параметры:
+        notebook: Виджет ttk.Notebook для размещения вкладок
+    """
+    # Вкладка с теоретическими основами
     tab1 = ttk.Frame(notebook)
-
-    # Создаем основной контейнер с разделением
-    main_paned = ttk.PanedWindow(tab1, orient=tk.HORIZONTAL)
-    main_paned.pack(fill=tk.BOTH, expand=True)
-
-    # Левая панель - текст
-    text_frame = ttk.Frame(main_paned)
-    text_canvas = tk.Canvas(text_frame)
-    text_scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=text_canvas.yview)
-    scrollable_text = ttk.Frame(text_canvas)
-
-    scrollable_text.bind(
-        "<Configure>",
-        lambda e: text_canvas.configure(
-            scrollregion=text_canvas.bbox("all")
-        )
-    )
-    text_canvas.create_window((0, 0), window=scrollable_text, anchor="nw")
-    text_canvas.configure(yscrollcommand=text_scrollbar.set)
-
-    # Правая панель - изображения (вертикальное разделение)
-    img_paned = ttk.PanedWindow(main_paned, orient=tk.VERTICAL)
-
-
-    help_text = """1. Устройство дуговой сталеплавильной печи (ДСП)
-   - Основная нагрузка на свод печи
-   - Три электрода с током до сотен тысяч ампер
-
-2. Ключевые формулы модели:
-
-       Электродинамические силы:
-       ΔFⱼ,imp = ΔIₖ(μₐIⱼ⁰l)/(2πrⱼₖ⁰)
-       ΔFⱼ,kp = ΔIₖ(μₐIⱼ⁰l₁)/(2πrⱼₖ⁰)
-
-       Система уравнений движения:
-       J₁Θ̈₁ + b₁Θ̇₁ + c₁Θ₁ + l²(l/2 + l₁)μₐ(I₁⁰I₂⁰)/(2πr₁₂⁰)(Θ₁-Θ₂) + ... = ΔM₁
-
-       Характеристическое уравнение:
-       8σ³e⁻³ᵖᵗ - (40c + 8P₁ + P₂)σ²e⁻²ᵖᵗ + ... = 0
-
-       Критерий устойчивости:
-       w(p) = [8σ³e⁻³ᵖᵗ - ... - 32c³] / (P₁²P₂)
-       Система устойчива при w = -1
-
-3. Параметры модели:
-       - μₐ = μ₀μᵣ - магнитная проницаемость
-       - Jᵢ - момент инерции
-       - cᵢ - приведенная жесткость
-       - τ = χ/(2πfR) - запаздывание"""
-
-    ttk.Label(scrollable_text, text=help_text, justify=tk.LEFT, padding=10).pack()
-
-    # Добавляем изображение 1 (верхнее)
-    try:
-        img1_frame = ttk.Frame(img_paned)
-        dsp_img = Image.open("images/рисунок-1.png")
-        dsp_img = dsp_img.resize((500, 350), Image.LANCZOS)
-        dsp_photo = ImageTk.PhotoImage(dsp_img)
-        img_label = ttk.Label(img1_frame, image=dsp_photo)
-        img_label.image = dsp_photo
-        img_label.pack(pady=5)
-        ttk.Label(img1_frame, text="Рис 1. Схема комплекса ДСП", justify=tk.CENTER).pack()
-        img_paned.add(img1_frame, weight=1)
-    except Exception as e:
-        print(f"Ошибка загрузки изображения ДСП: {e}")
-
-    # Добавляем изображение 2 (нижнее)
-    try:
-        img2_frame = ttk.Frame(img_paned)
-        mech_img = Image.open("images/рисунок-2.png")
-        mech_img = mech_img.resize((500, 300), Image.LANCZOS)
-        mech_photo = ImageTk.PhotoImage(mech_img)
-        img_label = ttk.Label(img2_frame, image=mech_photo)
-        img_label.image = mech_photo
-        img_label.pack(pady=5)
-        ttk.Label(img2_frame,
-                  text="Рис 2. Упрощенная эквивалентная механическая модель",
-                  justify=tk.CENTER).pack()
-        img_paned.add(img2_frame, weight=1)
-    except Exception as e:
-        print(f"Ошибка загрузки изображения модели: {e}")
-
-    # Упаковываем элементы
-    text_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    text_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    text_frame.pack(fill=tk.BOTH, expand=True)
-
-    main_paned.add(text_frame, weight=2)
-    main_paned.add(img_paned, weight=1)
-
-    # Остальные вкладки без изменений...
+    _create_theory_tab(tab1)
     notebook.add(tab1, text="Теоретические основы")
 
-    # Вкладка 2: Руководство пользователя
+    # Вкладка с руководством пользователя
     tab2 = ttk.Frame(notebook)
     _add_scrolled_text(tab2, """1. Вкладка 'Параметры системы':
        - Задайте параметры электрододержателей и электрической цепи
@@ -138,27 +59,101 @@ def _add_help_tabs(notebook):
        - Результат устойчивости отобразится в текстовом поле""")
     notebook.add(tab2, text="Руководство пользователя")
 
-    # Вкладка 3: Примеры расчетов
-    tab3 = ttk.Frame(notebook)
-    _add_scrolled_text(tab3, """Пример 1: Базовая конфигурация
-       - Параметры по умолчанию
-       - Результат: система устойчива
 
-Пример 2: Увеличенное запаздывание
-       - Установите τ = 0.5
-       - Результат: система становится неустойчивой
+def _create_theory_tab(parent):
+    """Создает вкладку с теоретическими основами и схемами"""
+    paned = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
+    paned.pack(fill=tk.BOTH, expand=True)
 
-Пример 3: Уменьшенная жесткость
-       - Установите c = 5000
-       - Результат: появление автоколебаний""")
-    notebook.add(tab3, text="Примеры расчетов")
+    # Текстовый блок с формулами
+    text_frame = ttk.Frame(paned)
+    _add_scrolled_text(text_frame,
+"""1. Устройство дуговой сталеплавильной печи (ДСП)
+  - Основная нагрузка на свод печи
+  - Три электрода с током до сотен тысяч ампер
+
+2. Ключевые формулы модели:
+
+   Электродинамические силы:
+ΔFⱼ,imp = ΔIₖ(μₐIⱼ⁰l)/(2πrⱼₖ⁰)  
+ΔFⱼ,kp = ΔIₖ(μₐIⱼ⁰l₁)/(2πrⱼₖ⁰)
+
+   Система дифференциальных уравнений:
+J₁Θ̈₁ + b₁Θ̇₁ + c₁Θ₁ + l²(l/2 + l₁)μₐ(I₁⁰I₂⁰)/(2πr₁₂⁰)(Θ₁-Θ₂) + l²(l/2 + l₁)μₐ(I₁⁰I₃⁰)/(2πr₁₃⁰)(Θ₁-Θ₃) = ΔM₁  
+J₂Θ̈₂ + b₂Θ̇₂ + c₂Θ₂ + l²(l/2 + l₁)μₐ(I₂⁰I₁⁰)/(2πr₁₂⁰)(Θ₂-Θ₁) + l²(l/2 + l₁)μₐ(I₂⁰I₃⁰)/(2πr₂₃⁰)(Θ₂-Θ₃) = ΔM₂  
+J₃Θ̈₃ + b₃Θ̇₃ + c₃Θ₃ + l²(l/2 + l₁)μₐ(I₃⁰I₁⁰)/(2πr₃₁⁰)(Θ₃-Θ₁) + l²(l/2 + l₁)μₐ(I₃⁰I₂⁰)/(2πr₃₂⁰)(Θ₃-Θ₂) = ΔM₃
+
+   Моменты сил:
+ΔMᵢₘₚ = -(μₐIᵢ⁰)/(2πrᵢⱼ)·(l²/2)·((αⱼ+βⱼl₉⁰)+I⁰R)/(Iᵢ⁰(R²+χ²)+R(αⱼ+βⱼl₉⁰))·βⱼΘⱼ(t-τ)  
+ΔMᵢₚ = -(μₐIᵢ⁰)/(2πrᵢⱼ)·lᵢl·((αⱼ+βⱼl₉⁰)+I⁰R)/(Iᵢ⁰(R²+χ²)+R(αⱼ+βⱼl₉⁰))·βⱼlΘⱼ(t-τ)
+
+   Характеристическое уравнение:
+8σ³e⁻³ᵖᵗ - (40c + 8P₁ + P₂)σ²e⁻²ᵖᵗ + (64c² + 32P₁ + 2P₂)cσe⁻ᵖᵗ - 32c³ - (32P₁ + P₂)c² + P₁²P₂ = 0  
+где P₁ = Jp² + bp + c₁, P₂ = Jp² + bp + c₂
+
+   Критерий устойчивости:
+w(p) = [8σ³e⁻³ᵖᵗ - (40c+8P₁+P₂)σ²e⁻²ᵖᵗ + (64c²+32P₁+2P₂)cσe⁻ᵖᵗ - 32c³ - (32P₁+P₂)c²]/(P₁²P₂)  
+Система устойчива при w = -1
+
+3. Параметры модели:
+- μₐ = μ₀μᵣ (μ₀=1.257·10⁻⁶ Гн/м)
+- Jᵢ - момент инерции
+- bᵢ - коэффициент рассеивания
+- cᵢ - приведенная жесткость
+- τ = χ/(2πfR) - запаздывание
+- l - длина проводника
+- l₁ - длина электрода
+- Iᵢ⁰ - стационарный ток
+- α - анодно-катодное напряжение
+- β - градиент столба дуги
+- R - активное сопротивление
+- χ - реактивное сопротивление"""
+                       )
+
+    # Блок с изображениями
+    img_paned = ttk.PanedWindow(paned, orient=tk.VERTICAL)
+    _load_image(img_paned, "images/рисунок-1.png", "Рис 1. Схема комплекса ДСП", 500, 350)
+    _load_image(img_paned, "images/рисунок-2.png", "Рис 2. Упрощенная эквивалентная механическая модель", 500, 300)
+
+    paned.add(text_frame, weight=2)
+    paned.add(img_paned, weight=1)
+
+
+def _load_image(parent, path, caption, width, height):
+    """Загружает и отображает изображение с подписью
+
+    Параметры:
+        parent: Родительский виджет
+        path: Путь к файлу изображения
+        caption: Текст подписи
+        width: Ширина изображения
+        height: Высота изображения
+    """
+    try:
+        frame = ttk.Frame(parent)
+        img = Image.open(path).resize((width, height), Image.LANCZOS)
+        photo = ImageTk.PhotoImage(img)
+
+        label = ttk.Label(frame, image=photo)
+        label.image = photo
+        label.pack(pady=5)
+
+        ttk.Label(frame, text=caption, justify=tk.CENTER).pack()
+        parent.add(frame, weight=1)
+    except Exception as e:
+        print(f"Ошибка загрузки изображения {path}: {e}")
 
 
 def _add_scrolled_text(parent, text):
-    """Добавляет текстовое поле с прокруткой"""
-    text_frame = ttk.Frame(parent)
-    text_widget = tk.Text(text_frame, wrap='word', padx=10, pady=10)
-    scrollbar = ttk.Scrollbar(text_frame, command=text_widget.yview)
+    """Добавляет текстовое поле с прокруткой
+
+    Параметры:
+        parent: Родительский виджет
+        text: Текст для отображения
+    """
+    frame = ttk.Frame(parent)
+    text_widget = tk.Text(frame, wrap='word', padx=10, pady=10)
+    scrollbar = ttk.Scrollbar(frame, command=text_widget.yview)
 
     text_widget.configure(yscrollcommand=scrollbar.set)
     text_widget.insert('1.0', text)
@@ -166,4 +161,4 @@ def _add_scrolled_text(parent, text):
 
     scrollbar.pack(side='right', fill='y')
     text_widget.pack(side='left', fill='both', expand=True)
-    text_frame.pack(fill='both', expand=True)
+    frame.pack(fill='both', expand=True)

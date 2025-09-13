@@ -1,3 +1,4 @@
+# Файл plot_tab.py
 from tkinter import ttk
 from matplotlib.figure import Figure
 from src.calculations.compute import compute_stability_boundary
